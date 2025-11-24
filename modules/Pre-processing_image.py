@@ -16,7 +16,7 @@ class ImagePreprocessing:
         try:
             image = cv2.imread(image_path)
             if image is None:
-                raise ValueError(f"Image not found or unreadable: {image_path}")
+                raise ValueError(f"The Image is not found '{image_path}' in this path.")
             return cv2.resize(image, self.image_size)
         except cv2.error as e:
             raise RuntimeError(f"OpenCV error while loading {image_path}: {e}")
@@ -61,7 +61,7 @@ class ImagePreprocessing:
 
         for image_dir in image_dirs:
             if not os.path.exists(image_dir):
-                print(f"Skipping missing image folder: {image_dir}")
+                print(f"The selected directory is not found: {image_dir}")
                 continue
 
             for filename in os.listdir(image_dir):
@@ -105,7 +105,7 @@ class ImagePreprocessing:
         label_dict = {}
         for csv_path in csv_paths:
             if not os.path.exists(csv_path):
-                print(f"Skipping missing CSV: {csv_path}")
+                print(f"CSV file is not found in '{csv_path}' this path.")
                 continue
             try:
                 df = pd.read_csv(csv_path)
@@ -126,7 +126,7 @@ class ImagePreprocessing:
 
         for xls_path in xls_paths:
             if not os.path.exists(xls_path):
-                print(f"Skipping missing XLS: {xls_path}")
+                print(f"The selected XLS file is not found in '{xls_path}' this path.")
                 continue
             try:
                 df = pd.read_excel(xls_path)
@@ -150,12 +150,7 @@ if __name__ == "__main__":
 
     # Kaggle
     kaggle_image_dirs = ["../../Kaggle_Diabetic_Retinopathy/resized_traintest15_train19"]
-    kaggle_csv_paths = [
-        "../../Kaggle_Diabetic_Retinopathy/labels/testLabels15.csv",
-        "../../Kaggle_Diabetic_Retinopathy/labels/trainLabels15.csv",
-        "../../Kaggle_Diabetic_Retinopathy/labels/trainLabels19.csv",
-        "../../Kaggle_Diabetic_Retinopathy/labels/traintestLabels15_trainLabels19.csv"
-    ]
+    kaggle_csv_paths = ["../../Kaggle_Diabetic_Retinopathy/labels/traintestLabels15_trainLabels19.csv"]
     kaggle_severity_map = {
         0: "No DR", 1: "Mild", 2: "Moderate", 3: "Severe", 4: "Proliferative"
     }
