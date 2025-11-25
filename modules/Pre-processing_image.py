@@ -6,7 +6,7 @@ from sklearn.preprocessing import LabelEncoder
 from sklearn.model_selection import train_test_split
 
 class ImagePreprocessing:
-    def __init__(self, image_size=(512, 512), max_images=None, log_skipped=True):
+    def __init__(self, image_size=(256, 256), max_images=None, log_skipped=True):
         self.image_size = image_size
         self.encoder = LabelEncoder()
         self.max_images = max_images
@@ -149,12 +149,13 @@ if __name__ == "__main__":
     processor = ImagePreprocessing(max_images=None, log_skipped=True)
 
     # Kaggle
-    kaggle_image_dirs = ["../../Kaggle_Diabetic_Retinopathy/resized_traintest15_train19"]
-    kaggle_csv_paths = ["../../Kaggle_Diabetic_Retinopathy/labels/traintestLabels15_trainLabels19.csv"]
+    main_path = "D:/Education/MSc/Active Assignments/Project/Model/"
+    kaggle_image_dirs = [main_path + "Kaggle_Diabetic_Retinopathy/resized_traintest15_train19"]
+    kaggle_csv_paths = [main_path + "Kaggle_Diabetic_Retinopathy/labels/traintestLabels15_trainLabels19.csv"]
     kaggle_severity_map = {
         0: "No DR", 1: "Mild", 2: "Moderate", 3: "Severe", 4: "Proliferative"
     }
-    kaggle_save_dir = "../../KDR_Pre-processed"
+    kaggle_save_dir = main_path + "KDR_Pre-processed"
 
     print("Kaggle DR Image Pre-processing Started.")
 
@@ -169,19 +170,19 @@ if __name__ == "__main__":
 
     # Messidor
     messidor_image_dirs = [
-        "../../Messidor/Base11",
-        "../../Messidor/Base21",
-        "../../Messidor/Base31"
+        main_path + "Messidor/Base11",
+        main_path + "Messidor/Base21",
+        main_path + "Messidor/Base31"
     ]
     messidor_csv_paths = [
-        "../../Messidor/Base11/Annotation_Base11.xls",
-        "../../Messidor/Base21/Annotation_Base21.xls",
-        "../../Messidor/Base31/Annotation_Base31.xls"
+        main_path + "Messidor/Base21/Annotation_Base21.xls",
+        main_path + "Messidor/Base31/Annotation_Base31.xls",
+        main_path + "Messidor/Base11/Annotation_Base11.xls"
     ]
     messidor_severity_map = {
         0: "No DR", 1: "Mild", 2: "Moderate", 3: "Severe"
     }
-    messidor_save_dir = "../../MS_Pre-processed"
+    messidor_save_dir = main_path + "MS_Pre-processed"
 
     print("Messidor Image Pre-processing Started.")
 
