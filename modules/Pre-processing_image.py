@@ -6,7 +6,7 @@ from sklearn.preprocessing import LabelEncoder
 from sklearn.model_selection import train_test_split
 
 class ImagePreprocessing:
-    def __init__(self, image_size=(256, 256), max_images=None, log_skipped=True):
+    def __init__(self, image_size=(512, 512), max_images=None, log_skipped=True):
         self.image_size = image_size
         self.encoder = LabelEncoder()
         self.max_images = max_images
