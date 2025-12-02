@@ -3,10 +3,9 @@ import cv2
 import numpy as np
 import pandas as pd
 from sklearn.preprocessing import LabelEncoder
-from sklearn.model_selection import train_test_split
 
 class ImagePreprocessing:
-    def __init__(self, image_size=(512, 512), max_images=None, log_skipped=True):
+    def __init__(self, image_size=(224, 224), max_images=None, log_skipped=True):
         self.image_size = image_size
         self.encoder = LabelEncoder()
         self.max_images = max_images
@@ -68,11 +67,23 @@ class ImagePreprocessing:
                 if self.max_images and count >= self.max_images:
                     break
 
-                filename = filename.lower()
-                if not filename.endswith((".jpg", ".jpeg", ".png", ".tif")):
+                filename_lower = filename.lower()
+                if not filename_lower.endswith((".jpg", ".jpeg", ".png", ".tif")):
                     continue
 
-                if filename in label_dict:
+                # Handling extensions
+                key = filename_lower
+                if key not in label_dict:
+                    # try adding/removing extensions
+                    for ext in [".jpg", ".jpeg", ".png", ".tif"]:
+                        if filename_lower.endswith(ext):
+                            key = filename_lower
+                            break
+                        elif (filename_lower + ext) in label_dict:
+                            key = filename_lower + ext
+                            break
+
+                if key in label_dict:
                     path = os.path.join(image_dir, filename)
                     try:
                         image = self.preprocess_image(path)
@@ -83,7 +94,7 @@ class ImagePreprocessing:
                             image_paths.append(save_path)
                         else:
                             image_paths.append(path)
-                        labels.append(label_dict[filename])
+                        labels.append(label_dict[key])
                         count += 1
                     except Exception as e:
                         print(f"Skipping {filename}: {e}")
@@ -97,9 +108,9 @@ class ImagePreprocessing:
                             log.write(f"{filename}: label not found\n")
 
         if len(image_paths) == 0 or len(labels) == 0:
-            raise ValueError("No valid Messidor images or labels found. Check your XLS files and image folders.")
+            raise ValueError("No valid images or labels found. Check your XLS/CSV files and image folders.")
 
-        return train_test_split(image_paths, self.encode_labels(labels), test_size=0.2, stratify=labels)
+        return image_paths, self.encode_labels(labels)
 
     def preprocess_kaggle_dataset(self, image_dirs, csv_paths, severity_map=None, save_dir=None):
         label_dict = {}
@@ -114,7 +125,7 @@ class ImagePreprocessing:
                     print(f"Skipping {csv_path}: missing 'image' or 'level' column.")
                     continue
                 for _, row in df.iterrows():
-                    filename = str(row["image"]).strip() + ".jpg"
+                    filename = str(row["image"]).strip().lower() + ".jpg"
                     grade = int(row["level"])
                     label_dict[filename] = severity_map.get(grade, grade) if severity_map else grade
             except Exception as e:
@@ -136,13 +147,14 @@ class ImagePreprocessing:
                     continue
                 for _, row in df.iterrows():
                     filename = str(row["image name"]).strip().lower()
-                    filename += ".tif" if not filename.endswith(".tif") else ""
+                    # preserve extension if exists, else add .tif
+                    if not any(filename.endswith(ext) for ext in [".jpg", ".jpeg", ".png", ".tif"]):
+                        filename += ".tif"
                     label_dict[filename] = severity_map.get(int(row["retinopathy grade"]), row["retinopathy grade"])
             except Exception as e:
                 print(f"Error reading {xls_path}: {e}")
 
         return self._process_images_streaming(image_dirs, label_dict, save_dir)
-
 
 
 if __name__ == "__main__":
@@ -159,14 +171,13 @@ if __name__ == "__main__":
 
     print("Kaggle DR Image Pre-processing Started.")
 
-    X_train, X_test, y_train, y_test = processor.preprocess_kaggle_dataset(
+    X_kaggle, y_kaggle = processor.preprocess_kaggle_dataset(
         image_dirs=kaggle_image_dirs,
         csv_paths=kaggle_csv_paths,
         severity_map=kaggle_severity_map,
         save_dir=kaggle_save_dir
     )
-    print("Kaggle training samples:", len(X_train))
-    print("Kaggle test samples:", len(X_test))
+    print("Kaggle samples:", len(X_kaggle))
 
     # Messidor
     messidor_image_dirs = [
@@ -174,7 +185,7 @@ if __name__ == "__main__":
         main_path + "Messidor/Base21",
         main_path + "Messidor/Base31"
     ]
-    messidor_csv_paths = [
+    messidor_xls_paths = [
         main_path + "Messidor/Base21/Annotation_Base21.xls",
         main_path + "Messidor/Base31/Annotation_Base31.xls",
         main_path + "Messidor/Base11/Annotation_Base11.xls"
@@ -186,12 +197,10 @@ if __name__ == "__main__":
 
     print("Messidor Image Pre-processing Started.")
 
-    X_train, X_test, Y_train, Y_test = processor.preprocess_messidor_dataset(
+    X_messidor, y_messidor = processor.preprocess_messidor_dataset(
         image_dirs=messidor_image_dirs,
-        xls_paths=messidor_csv_paths,
+        xls_paths=messidor_xls_paths,
         severity_map=messidor_severity_map,
         save_dir=messidor_save_dir
     )
-
-    print("Messidor training samples:", len(X_train))
-    print("Messidor test samples:", len(X_test))
+    print("Messidor samples:", len(X_messidor))

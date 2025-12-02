@@ -2,7 +2,7 @@ import os
 import shutil
 import pandas as pd
 
-def create_ordered_subset(
+def create_ordered_subset_with_csv(
     csv_path: str,
     image_dir: str,
     output_dir: str,
@@ -19,12 +19,13 @@ def create_ordered_subset(
 
     total_moved = 0
     log_entries = []
+    moved_records = []
 
     # Explicit level order
     for level in [0, 1, 2, 3, 4]:
         level_df = df[df[label_column] == level]
 
-        # If fewer than 500 images exist, take all
+        # If fewer than samples_per_class images exist, take all
         n_samples = min(len(level_df), samples_per_class)
         sampled = level_df.sample(n=n_samples, random_state=seed)
 
@@ -44,6 +45,11 @@ def create_ordered_subset(
                     moved_count += 1
                     print(f"Moved: {img_name}{ext} | Level: {img_level}")
                     log_entries.append(f"Moved: {img_name}{ext} | Level: {img_level}")
+                    # Record for new CSV
+                    moved_records.append({
+                        image_column: f"{img_name}{ext}",
+                        label_column: img_level
+                    })
                     found = True
                     break
             if not found:
@@ -58,14 +64,21 @@ def create_ordered_subset(
         for entry in log_entries:
             log_file.write(entry + "\n")
 
-    print(f"\n Finished. Moved {total_moved} images into {output_dir}")
-    print(f" Full list of moved files saved to: {log_path}")
+    # Save new CSV of moved images
+    new_csv_path = os.path.join(output_dir, "subset_labels.csv")
+    if moved_records:
+        df_moved = pd.DataFrame(moved_records)
+        df_moved.to_csv(new_csv_path, index=False)
+        print(f"New CSV for moved images saved to: {new_csv_path}")
+    else:
+        print("No images were moved; CSV not created.")
+
+    print(f"\nFinished. Total images moved: {total_moved}")
 
 
-# Example usage
 MAIN_PATH = "D:/Education/MSc/Active Assignments/Project/Model/KDR_Pre-processed"
 
-create_ordered_subset(
+create_ordered_subset_with_csv(
     csv_path=os.path.join(MAIN_PATH, "traintestLabels15_trainLabels19.csv"),
     image_dir=MAIN_PATH,
     output_dir=os.path.join(MAIN_PATH, "subset"),
